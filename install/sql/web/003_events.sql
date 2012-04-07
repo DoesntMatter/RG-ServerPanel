@@ -6,7 +6,5 @@ CREATE TABLE `events` (
   `target_class` tinytext,
   `target_id` int(11) DEFAULT NULL,
   `text` tinytext,
-  `target_obj` text,
-  `visible` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
