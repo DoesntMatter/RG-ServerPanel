@@ -100,14 +100,9 @@ class Account extends BaseModel {
     //---------------------------------------------------------------------------
     //-- Relations
     //---------------------------------------------------------------------------
-    function get_realms(){
-        $realms = Realm::find()->all();
-        return $realms;
-    }
-    
     function get_characters() {
         $characters = array();
-        foreach ($this->realms as $realm) {
+        foreach (Realm::find()->all() as $realm) {
             $result = Character::find()->where(array('account' => $this->id))->realm($realm->id)->all();
             if(is_array($result))
                 $characters += $result;
@@ -158,7 +153,8 @@ class Account extends BaseModel {
     
     function get_deleted_characters(){
         $del_chars = array();
-        foreach($this->realms as $realm){
+        $realms = Realm::find()->all();
+        foreach($realms as $realm){
             $result = Character::find()->where(array('deleteinfos_account' => $this->id))->realm($realm->id)->all();
             if(is_array($result))
                 $del_chars += $result;

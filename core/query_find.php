@@ -35,7 +35,7 @@ class QueryFind extends SqlS_QuerySelect {
         if(!$this->reload)
             $cache = ObjectStore::get($cache_key);
 
-        if ($cache) {
+        if (!empty($cache)) {
             return $cache;
         } else {
             $result = parent::execute();
@@ -86,7 +86,7 @@ class QueryFind extends SqlS_QuerySelect {
     public function distinct_all($field) {
         $this->fields = array($field);
         $this->type = 'many';
-        $this->limit = null;
+        $this->limit(null);
         $this->distinct(true);
         $this->counting(false);
         return $this->execute();
@@ -98,7 +98,7 @@ class QueryFind extends SqlS_QuerySelect {
     }
     
     public function last() {
-        $this->order = array($this->pk, ' DESC');
+        $this->order($this->pk . ' DESC');
         $this->limit(1);
         return $this->execute();
     }

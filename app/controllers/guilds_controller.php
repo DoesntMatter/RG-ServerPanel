@@ -30,12 +30,14 @@ class GuildsController extends BaseController {
             $realmnames[$r->id] = $r->name;
         }
         
-        $find = Guild::find()->where(array_filter($params))->page($params['page']);
-        
+        $find = Guild::find()->where(array_filter($params));
+
+        if(isset($params['page'])) $find->page($params['page']);
+
         $guilds = array();
         $guilds_count = 0;
         if(isset($params['realm']) && is_numeric($params['realm'])){
-            $find = $find->realm($params['realm']);
+            $find->realm($params['realm']);
             $guilds += $find->all();
             $guilds_count += $find->count();
         } else {
@@ -56,8 +58,16 @@ class GuildsController extends BaseController {
     
     function show($params){
         $guild = Guild::find()->where(array('guildid'=> $params['id']))->realm($params['rid'])->first();
+
+        $find = Character::find()
+            ->realm($guild->realm->id)
+            ->join("INNER", 'guild_member' ,array('rank','guildid'),'guid')
+            ->where(array('guild_member.guildid' => $guild->guildid))
+            ->order('guild_member.rank');
+
         $data = array(
-            'guild' => $guild
+            'guild' => $guild,
+            'members_count' => $find->count()
         );
         $this->render($data);
     }
@@ -82,5 +92,25 @@ class GuildsController extends BaseController {
                 $this->render_ajax('error', $guild->errors[0]);
             }
         }
+    }
+
+    function members($params){
+        $guild = Guild::find()->where(array('guildid' => $params['id']))->realm($params['rid'])->first();
+
+        $find = Character::find()
+            ->realm($guild->realm->id)
+            ->join("INNER", 'guild_member' ,array('rank','guildid'),'guid')
+            ->where(array('guild_member.guildid' => $guild->guildid))
+            ->order('guild_member.rank');
+
+        if(isset($params['page'])) $find->page($params['page']);
+        $members = $find->all();
+        $members_count = $find->count();
+
+        $data = array(
+            'members' => $members,
+            'members_count' => $members_count
+        );
+        $this->render_partial("members",$data);
     }
 }
