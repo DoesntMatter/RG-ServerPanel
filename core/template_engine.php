@@ -30,8 +30,11 @@ class TemplateEngine extends Singleton {
     }
 
     public function get_rendered_template($template, $data=array()) {
+        GenericLogger::enter_group('View');
         $template = $this->twig->loadTemplate($template);
-        return $template->render($data);
+        $rendered_template = $template->render($data);
+        GenericLogger::leave_group();
+        return $rendered_template;
     }
 
     public function register_function($class, $function_name, $method_name, $options=array()) {
@@ -48,12 +51,11 @@ class TemplateEngine extends Singleton {
     }
 
     public function load() {
-        Debug::add('Loading Template-Engine');
+        GenericLogger::debug('Loading Template-Engine');
         Twig_Autoloader::register();
         $loader = $this->get_loader();     
         $config = $this->get_config();
         $this->twig = new Twig_Environment($loader, $config);
-        Debug::stopTimer();
     }
 
     private function get_config() {

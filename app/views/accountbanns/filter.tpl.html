@@ -1,19 +1,23 @@
-<form method="get" id="form" name="form" action="{{link_to('events','index')}}">
+<form method="get" id="form" name="form" action="{{link_to('account_banns','index')}}">
     <fieldset>
-        <label for="account_id">Account ID</label>
-        <input type="text" name="account_id" value="{{ params.account_id }}" />
-        
-        <label for="type">Event Type</label>
-        {{ selectArray('type',types,params.type) }}
+        <label for="id">Account ID</label>
+        <input type="text" name="id" value="{{ params.id }}" />
 
-        <label for="target_class">Target Type</label>
-        {{ selectArray('target_class',target_types,params.target_class, true) }}
-        
-        <label for="target_id">Target ID</label>
-        <input type="text" name="target_id" value="{{ params.target_id }}" />
-        
-        <label for="text">Text</label>
-        <input type="text" name="target_obj" value="{{ params.target_obj }}" />
+        <label for="bannedby">Banning GM</label>
+        <input type="text" name="bannedby" value="{{ params.bannedby }}" />
+
+        <label for="reason">Reason</label>
+        <input type="text" name="banreason" value="{{ params.banreason }}" />
+
+        <script type="text/javascript">
+            $(document).ready(function(){
+                if("{{params.active}}" == "1"){
+                    $("#active").attr('checked', true).trigger('change');
+                }
+            });
+        </script>
+        <label for="active">Active</label>
+        <input id="active" type="checkbox" name="active" value="1">
 
 
         <script type="text/javascript">
@@ -40,5 +44,3 @@
         <input type="submit" name="submit" value="Filter" />
     </fieldset>
 </form>
-
-    

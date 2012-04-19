@@ -24,13 +24,13 @@ class ArenaTeamsController extends BaseController {
     );
     
     function index($params=array()) {
-        $realms = Realm::find()->all();
+        $realms = Realm::find()->available()->all();
         $realmnames = array('all' => 'All');
         foreach($realms as $r){
             $realmnames[$r->id] = $r->name;
         }
         
-        $find = ArenaTeam::find()->where(array_filter($params));
+        $find = ArenaTeam::find()->where(array_filter($params))->order('rating DESC');
         if(isset($params['page'])) $find->page($params['page']);
         
         $teams = array();
@@ -43,7 +43,7 @@ class ArenaTeamsController extends BaseController {
             $teams_count = 0;
             foreach ($realms as $realm) {
                 $find = $find->realm($realm->id);
-                $teams += $find->all();
+                $teams += array_merge($teams, $find->all());
                 $teams_count += $find->count();
             }
         }

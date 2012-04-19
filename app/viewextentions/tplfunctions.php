@@ -33,11 +33,12 @@ class tplfunctions {
     }
 
     function link_to($controller, $action, $params=array()) {
+        if(is_object($controller)) $controller = get_class($controller);
         $url = "";
         if (Environment::get_value('clean_urls')) {
-            $url = Request::$base_url . "/$controller/$action";
+            $url = Kernel::$request->base_url . "/$controller/$action";
         } else {
-            $url = Request::$base_url . "/index.php?url=$controller/$action";
+            $url = Kernel::$request->base_url . "/index.php?url=$controller/$action";
         }
         if (!empty($params)) {
             $url .= '?';
@@ -106,14 +107,10 @@ class tplfunctions {
         return Environment::get_value($key, $scope);
     }
     
-    function display_debug(){
-        Debug::display();
-    }
-    
     function pagination_bar_html($model, $max_items, $multi=1) {
-        $action = Request::$action;
-        $controller = Request::$controller;
-        $params = Request::$params;
+        $action = Kernel::$route->action;
+        $controller = Kernel::$route->controller;
+        $params = Kernel::$request->params;
 
         $per_page = $model::$per_page * $multi;
         
@@ -126,7 +123,8 @@ class tplfunctions {
         $op = '<div id="pagination">';
 
         $last_page = ceil($max_items / ($per_page));
-        
+
+        $delemitted = false;
         for ($page = 1; $last_page >= $page; $page++) {
             $params['page'] = $page;
 
@@ -141,8 +139,10 @@ class tplfunctions {
             
             if ($last_page <= 10 || $page == 1 || $page == $last_page || ($page >= ($current_page - 2) && $page <= ($current_page + 2))){
                 $op .= "<a id=\"$page\" data-type=\"href\" $link $class href=\"#\">$page</a>";
-            } else {
+                $delemitted = false;
+            } elseif(!$delemitted) {
                 $op .= "<a>...</a>";
+                $delemitted = true;
             }
                 
         }
@@ -159,8 +159,8 @@ class tplfunctions {
     }
 
     function ajax_pagination_bar_html($model, $max_items, $params=null, $multi=1, $controller=null, $action=null, $target="") {
-        if(is_null($action)) $action = Request::$action;
-        if(is_null($controller)) $controller = Request::$controller;
+        if(is_null($action)) $action = Kernel::$route->action;
+        if(is_null($controller)) $controller = Kernel::$route->controller;
         $current_page = 1;
 
         if($target != "") $target = "data-target=$target";
@@ -173,6 +173,7 @@ class tplfunctions {
 
         $last_page = ceil($max_items / ($per_page));
 
+        $delemitted = false;
         for ($page = 1; $last_page >= $page; $page++) {
             $params['page'] = $page;
 
@@ -186,8 +187,10 @@ class tplfunctions {
                 $tplf = new tplfunctions();
                 $link = 'data-link="' . $tplf->link_to($controller, $action) . '"';
                 $op .= "<a id=\"$page\" data-type=\"ajax\" $paramdata $link $class $target href=\"#\">$page</a>";
-            } else {
+                $delemitted = false;
+            } else if(!$delemitted){
                 $op .= "<a>...</a>";
+                $delemitted = true;
             }
 
         }
@@ -234,14 +237,17 @@ class tplfunctions {
     }
 
     // -- Form 
-    function selectDate_html(){
+    function selectDate_html($idprefix="", $yearspan=0, $defaultValue=null){
+        if($defaultValue == null)
+            $defaultValue = time();
+
         $curr_year = date('Y');
         $tpl_funcs = new tplfunctions();
-        $select_year = $tpl_funcs->selectYears($curr_year, $curr_year + 1);
-        $select_months = $tpl_funcs->selectMonths();
-        $select_days = $tpl_funcs->selectDays();
-        $select_hours = $tpl_funcs->selectHours();
-        $select_mins = $tpl_funcs->selectMinutes();
+        $select_year = $tpl_funcs->selectYears($curr_year - $yearspan - 2, $curr_year + $yearspan + 3, $idprefix . 'year_select', date('Y', $defaultValue));
+        $select_months = $tpl_funcs->selectMonths($idprefix . 'month_select', date('m', $defaultValue));
+        $select_days = $tpl_funcs->selectDays($idprefix . 'day_select', date('d', $defaultValue));
+        $select_hours = $tpl_funcs->selectHours($idprefix . 'hours_select', date('H', $defaultValue));
+        $select_mins = $tpl_funcs->selectMinutes($idprefix . 'minute_select', date('m', $defaultValue));
         $select = $select_year . $select_months . $select_days . ' - ' . $select_hours . ':' . $select_mins;
         return $select;
      }

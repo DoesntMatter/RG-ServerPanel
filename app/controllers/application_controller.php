@@ -32,7 +32,9 @@ class ApplicationController extends BaseController {
     }
 
     function check_login() {
+        GenericLogger::debug('Checking login');
         if (!isset(User::$current) || empty(User::$current)) {
+            GenericLogger::warning("Wrong login from " . $_SERVER['REMOTE_ADDR']);
             $this->flash('error', 'you are not logged in or your session timed out - please relog');
             $this->redirect_to_login();
             return false;
@@ -41,15 +43,18 @@ class ApplicationController extends BaseController {
     }
     
     function check_permission(){
-        $controller = get_class(Router::$controller);
-        $action = Router::$action;
+        GenericLogger::debug('Checking Permissions');
+        $controller = get_class(Router::$route->controller);
+        $action = Router::$route->action;
         if(isset(User::$current)){
-            $allowed = User::$current->is_permitted_to($action, $controller); 
+            $allowed = User::$current->is_permitted_to($action, $controller);
         } else {
             $allowed = Permissions::check_permission($controller, $action);
         }
         
         if(!$allowed){
+            isset(User::$current) ? $uname = User::$current->name : $uname = "Guest";
+            GenericLogger::warning($uname . " was not allowed to access " . $_SERVER['REQUEST_URI']);
             if(isset(User::$current)){
                 if(!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
                    $this->render_ajax('error', '401 - Not Allowed');
@@ -70,14 +75,8 @@ class ApplicationController extends BaseController {
         $this->redirect_to(array('session', 'add'));
     }
     
-    function render($view,$data=array()){
-        $tpl = Template::instance("application");
-        $tpl->render($view, $data);
-    }
-    
     function error($params){
-        $this->set_header_status($params['status']);
-        $this->render($params['status']);
+        $this->render_error($params['status']);
     }
 
 }

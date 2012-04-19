@@ -127,7 +127,11 @@ class tplfilters {
         }
     }
 
+    //TODO: make soft-delete safe
     function locked_html($account) {
+        if(!is_object($account))
+            return '';
+
         $funcs = new tplfunctions();
         if ($account->locked) {
             $link = $funcs->link_to('accounts', 'unlock', array('id' => $account->id));
@@ -142,8 +146,12 @@ class tplfilters {
         }
         return $op;
     }
-    
+
+    //TODO: make soft-delete safe
     function banned_html($account){
+        if(!is_object($account))
+            return '';
+
         $funcs = new tplfunctions();
         if($account->banned){
             $link = $funcs->link_to('account_banns', 'delete', array('id' => $account->id));
@@ -231,5 +239,13 @@ class tplfilters {
     
     function nl2br_html($string){
         return nl2br($string);
+    }
+
+    function banning_gm_html($ban){
+        $funcs = new tplfunctions();
+        if(is_a($ban->banning_account, 'Account'))
+            return $funcs->link_to_account_html($ban->banning_account);
+        else
+            return $ban->bannedby;
     }
 }

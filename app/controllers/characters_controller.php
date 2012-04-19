@@ -31,14 +31,25 @@ class CharactersController extends BaseController {
             return;
         }
         
-        $realms = Realm::find()->all();
+        $realms = Realm::find()->available()->all();
         
         $realmnames = array('all' => 'All');
         foreach($realms as $r){
             $realmnames[$r->id] = $r->name;
         }
-        
-        $find = Character::find()->where($params);
+
+        $find = Character::find();
+
+        //TODO: hacky hacky hacky
+        if(isset($params['name'])){
+            $char_name = $params['name'];
+            $params['name'] = "";
+            $find->where(array("(name LIKE :name OR deleteInfos_Name LIKE :name)", 'name' => $char_name));
+        }
+
+
+
+        $find->where($params);
         $find_count = Character::find()->where($params);
 
         if(isset($params['page'])) $find->page($params['page']);
@@ -73,8 +84,14 @@ class CharactersController extends BaseController {
 
     function show($params) {
         $char = Character::find()->where(array('guid' => $params['guid']))->realm($params['rid'])->first();
+        $events = Event::find()->where(array('target_class' => 'Character', 'target_dbid' => $params['rid'], 'target_id' => $params['guid']));
+        $cheats = CheatLogEntry::find()->realm($params['rid'])->where(array('guid' => $params['guid']));
         if ($char->guid == $params['guid']) {
-            $this->render(array('character' => $char));
+            $this->render(array(
+                'character' => $char,
+                'events_count' => $events->count(),
+                'cheats_count' => $cheats->count()
+            ));
         } else {
             $this->render_error('404');
         }
@@ -161,7 +178,7 @@ class CharactersController extends BaseController {
     function transfer($params){
         $char = Character::find()->where(array('guid' => $params['id']))->realm($params['rid'])->first();
         if($char->guid == $params['id']){
-            $realms = Realm::find()->all();
+            $realms = Realm::find()->available()->all();
 
             foreach($realms as $r){
                 if($r->id != $char->realm->id) $realmnames[$r->id] = $r->name;

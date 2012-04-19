@@ -102,7 +102,8 @@ class Account extends BaseModel {
     //---------------------------------------------------------------------------
     function get_characters() {
         $characters = array();
-        foreach (Realm::find()->all() as $realm) {
+        $realms = Realm::find()->available()->all();
+        foreach ($realms as $realm) {
             $result = Character::find()->where(array('account' => $this->id))->realm($realm->id)->all();
             if(is_array($result))
                 $characters += $result;
@@ -131,7 +132,7 @@ class Account extends BaseModel {
         foreach ($levels as $level) {
             if ($level->gmlevel >= Environment::get_value('min_gm_level', 'access')) {
                 if ($level->realmid == -1) {
-                    $realms = Realm::find()->all();
+                    $realms = Realm::find()->available()->all();
                     break;
                 } else {
                     $realms = Realms::find()->where(array('realmid' => $level->realmid))->first();
@@ -153,7 +154,7 @@ class Account extends BaseModel {
     
     function get_deleted_characters(){
         $del_chars = array();
-        $realms = Realm::find()->all();
+        $realms = Realm::find()->available()->all();
         foreach($realms as $realm){
             $result = Character::find()->where(array('deleteinfos_account' => $this->id))->realm($realm->id)->all();
             if(is_array($result))
@@ -171,6 +172,8 @@ class Account extends BaseModel {
                 ->where(array('id' => $this->id))
                 ->order('gmlevel ASC')
                 ->first();
+        if(!is_object($access_level))
+            $access_level = 0;
         return $access_level->gmlevel;
     }
 
@@ -179,6 +182,8 @@ class Account extends BaseModel {
                 ->where(array('id' => $this->id))
                 ->order('gmlevel DESC')
                 ->first();
+        if(!is_object($access_level))
+            $access_level = 0;
         return $access_level->gmlevel;
     }
 
@@ -190,8 +195,6 @@ class Account extends BaseModel {
     }
 
     public function get_online() {
-        $realms = Realm::find()->all();
-
         $online = false;
         foreach ($this->characters as $char) {
             if ($char->online == 1) {
